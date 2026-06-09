@@ -119,9 +119,9 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 .me-clock{font-size:1.4rem;color:var(--silver);min-width:70px;text-align:center}
 .pitch-container{
     width:100%;
-    height:280px;
+    height:300px;
     background-color: #235d26;
-    background-image: url('pitch_2.png');
+    background-image: url('pitch_3.png');
     background-position: center;
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -131,6 +131,17 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
     overflow:hidden;
     margin:10px 0;
     box-shadow:inset 0 0 30px rgba(0,0,0,0.8);
+}
+.me-ball {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: url('ball_3.png') center/contain no-repeat;
+    z-index: 15;
+    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1), left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
 }
 .feed-container{height:100px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:0.8rem;line-height:1.4}
 .feed-item{margin-bottom:6px;border-bottom:1px solid var(--border2);padding-bottom:6px;animation:fadein .3s}
@@ -235,7 +246,7 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 // DATA
 // =========================================================
 const FLAGS={FR:"🇫🇷",US:"🇺🇸",CA:"🇨🇦",UK:"🇬🇧",SE:"🇸🇪",NL:"🇳🇱",IT:"🇮🇹",NO:"🇳🇴",BE:"🇧🇪",FI:"🇫🇮",DK:"🇩🇰",DE:"🇩🇪",ES:"🇪🇸",BR:"🇧🇷",CL:"🇨🇱",AU:"🇦🇺",NZ:"🇳🇿",SA:"🇸🇦",MA:"🇲🇦",JP:"🇯🇵"};
-const NAT_REGION={FR:"EU",UK:"EU",SE:"EU",NL:"EU",IT:"EU",NO:"EU",BE:"EU",FI:"EU",DK:"EU",DE:"EU",ES:"EU",US:"NA",CA:"NA",BR:"SAM",CL:"SAM",AU:"OCE",NZ:"OCE",SA:"MENA",MA:"MENA",JP:"APAC"};
+const NAT_REGION={FR:"EU",UK:"EU",SE:"EU",NL:"EU",IT:"EU",NO:"EU",BE:"EU",FI:"EU",DK:"EU",DE:"EU",ES:"EU",US:"NA",CA:"NA",BR:"SAM",CL:"SAM",AU:"OCE",NZ:"OCE",SA:"MENA",MA:"EU",JP:"APAC"};
 const REGION_COL={EU:"var(--eu)",NA:"var(--na)",SAM:"var(--sam)",OCE:"var(--oce)",MENA:"var(--mena)",APAC:"var(--apac)"};
 const REGION_QUAL_THRESHOLD={EU:80,NA:65,SAM:55,MENA:50,OCE:40,APAC:35};
 const REGION_DIFFICULTY={EU:94,NA:91,SAM:87,MENA:84,OCE:78,APAC:74};
@@ -308,7 +319,6 @@ const COACHES=[
   {name:"Torment",    nat:"US",bonus:2,m_bonus:1,  desc:"Vétéran NA reconverti coach, lecture de jeu"},
   {name:"Mognus",     nat:"SE",bonus:2,m_bonus:2,  desc:"Ex-pro EU, lecture offensive — Dignitas"},
   {name:"Lawler",     nat:"UK",bonus:3,m_bonus:1,  desc:"Head coach Vitality 2021–2024, dominant EU"},
-  {name:"Chausette45",nat:"FR",bonus:2,m_bonus:1,  desc:"Coach BDS 2021–2022, cohésion EU"},
   {name:"Letshe",     nat:"DE",bonus:1,m_bonus:2,  desc:"Coach EU mid-tier, passion et rigueur"},
   {name:"Thanxelos",  nat:"DE",bonus:1,m_bonus:1,  desc:"Historique EU — Flipsid3 / Dignitas"},
   {name:"Sadjunior",  nat:"BR",bonus:1,m_bonus:1,  desc:"Coach SAM, agressivité offensive"},
@@ -381,12 +391,14 @@ const NUM_SLOTS=3;
 let slots=[null,null,null];
 let rollsUsed=[[],[],[]];
 let selectedCoach=null;
-let coachRolled=false;
+let coachRollsLeft=3;
+let usedCoaches=[];
 let teamOrg=null;
 let orgRollsLeft=3;
 let usedOrgs=[];
 let historyPlayers=[[],[],[]];
 let teamRegion="EU";
+let teamCohesion=0; // Ajouté pour contrôle au fil du tournoi
 let finalTeamRating=0;
 let finalMental=0;
 let tiltPenalty=0;
@@ -395,8 +407,8 @@ let usedOpps=[];
 let qualifMode="direct";
 
 // FICHIERS AUDIO
-const goalSound = new Audio('Rocket League Goal Sound_2.mp3');
-const finalMusic = new Audio('victory_2.mp3');
+const goalSound = new Audio('Rocket League Goal Sound_3.mp3');
+const finalMusic = new Audio('victory_3.mp3');
 
 function getRegion(nat){return NAT_REGION[nat]||"EU";}
 function pickUniqueWithHistory(pool, slotIndex) {
@@ -431,9 +443,9 @@ function buildDraft(){
   }
   document.getElementById("coach-area").innerHTML=`
     <div class="slot" style="background:var(--bg3)">
-      <div class="slot-title">Coach · Roll unique · Influence mental & note</div>
+      <div class="slot-title">Coach · Influence mental & note</div>
       <div id="coach-card" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:.8rem;font-style:italic">Aucun coach</div>
-      <button class="coach-roll-btn" id="btn-coach-roll" onclick="rollCoach()">🎯 Obtenir un coach</button>
+      <button class="coach-roll-btn" id="btn-coach-roll" onclick="rollCoach()">🎯 Obtenir un coach (3 essais)</button>
     </div>`;
   updateTeamPanel();
 }
@@ -479,7 +491,16 @@ function rollOrg(){
 
 function firstRoll(i){slots[i]=pickUniqueWithHistory(PLAYERS,i);rollsUsed[i]=[];renderPlayerCard(i);renderRollBtns(i);updateTeamPanel();}
 function rollAny(i){if(rollsUsed[i].includes("any"))return;rollsUsed[i].push("any");slots[i]=pickUniqueWithHistory(PLAYERS,i);renderPlayerCard(i);syncRollBtns(i);updateTeamPanel();}
-function rollRegion(i){if(rollsUsed[i].includes("region"))return;rollsUsed[i].push("region");const reg=slots[i]?getRegion(slots[i].nat):"EU";const pool=PLAYERS.filter(p=>getRegion(p.nat)===reg);slots[i]=pickUniqueWithHistory(pool.length?pool:PLAYERS,i);renderPlayerCard(i);syncRollBtns(i);updateTeamPanel();}
+function rollRegion(i){
+  if(rollsUsed[i].includes("region")) return;
+  rollsUsed[i].push("region");
+  const curReg = slots[i] ? getRegion(slots[i].nat) : "EU";
+  const pool = PLAYERS.filter(p => getRegion(p.nat) !== curReg); // Changement strict de région
+  slots[i] = pickUniqueWithHistory(pool.length ? pool : PLAYERS, i);
+  renderPlayerCard(i);
+  syncRollBtns(i);
+  updateTeamPanel();
+}
 
 function renderRollBtns(i){
   document.getElementById(`roll-area-${i}`).innerHTML=`
@@ -511,21 +532,37 @@ function renderPlayerCard(i){
 }
 
 function rollCoach(){
-  if(coachRolled)return;coachRolled=true;document.getElementById("btn-coach-roll").disabled=true;
-  const c=COACHES[Math.floor(Math.random()*COACHES.length)];selectedCoach=c;
-  const flag=FLAGS[c.nat]||"🏳️";const mCol=c.m_bonus>0?"var(--win)":c.m_bonus<0?"var(--loss)":"var(--text3)";
-  const mStr=c.m_bonus>0?`+${c.m_bonus}`:c.m_bonus<0?`${c.m_bonus}`:"±0";
+  if(coachRollsLeft <= 0) return;
+  coachRollsLeft--;
+  
+  let avail = COACHES.filter(c => !usedCoaches.includes(c.name));
+  if(avail.length === 0) avail = COACHES;
+  selectedCoach = avail[Math.floor(Math.random() * avail.length)];
+  usedCoaches.push(selectedCoach.name);
+
+  const flag=FLAGS[selectedCoach.nat]||"🏳️";
+  const mCol=selectedCoach.m_bonus>0?"var(--win)":selectedCoach.m_bonus<0?"var(--loss)":"var(--text3)";
+  const mStr=selectedCoach.m_bonus>0?`+${selectedCoach.m_bonus}`:selectedCoach.m_bonus<0?`${selectedCoach.m_bonus}`:"±0";
+  
   document.getElementById("coach-card").innerHTML=`
     <div style="width:100%">
       <div class="player-top">
         <div>
-          <div class="player-name">${flag} ${c.name} <span style="font-size:.7rem;color:var(--text3)">· Coach</span></div>
-          <div class="player-meta">${c.desc}</div>
+          <div class="player-name">${flag} ${selectedCoach.name} <span style="font-size:.7rem;color:var(--text3)">· Coach</span></div>
+          <div class="player-meta">${selectedCoach.desc}</div>
           <div style="font-size:.7rem;margin-top:4px;color:${mCol}">Mental ${mStr}</div>
         </div>
-        <div class="rating-badge rating-great" style="font-size:1.1rem;padding:3px 9px">+${c.bonus}</div>
+        <div class="rating-badge rating-great" style="font-size:1.1rem;padding:3px 9px">+${selectedCoach.bonus}</div>
       </div>
     </div>`;
+    
+  const btn = document.getElementById("btn-coach-roll");
+  if(coachRollsLeft > 0) {
+      btn.innerHTML = `↻ Changer de coach (${coachRollsLeft})`;
+  } else {
+      btn.innerHTML = `🎯 Coach validé`;
+      btn.disabled = true;
+  }
   updateTeamPanel();
 }
 
@@ -575,7 +612,7 @@ function updateTeamPanel(){
 // =========================================================
 document.getElementById("btn-launch").addEventListener("click",()=>{
   const r=calcTeam();if(!r)return;
-  finalTeamRating=r.total;finalMental=r.avgMental;tiltPenalty=0;
+  finalTeamRating=r.total;finalMental=r.avgMental;teamCohesion=r.cohesion;tiltPenalty=0;
   document.getElementById("sec-team").style.display="none";
   document.getElementById("sec-season").classList.remove("hidden");
   setTimeout(()=>document.getElementById("sec-season").scrollIntoView({behavior:"smooth",block:"start"}),100);
@@ -584,7 +621,6 @@ document.getElementById("btn-launch").addEventListener("click",()=>{
 
 function simEvent(myRating,difficulty,isMajor){
   let delta=myRating-difficulty;
-  if(myRating>90&&!isMajor) delta+=15;
   if(myRating>=95&&isMajor) delta+=10;
   const roll=Math.random()*100+delta*2.5;
   if(isMajor){
@@ -608,6 +644,7 @@ function runSeason(r){
   let isBoom=false,tiltReason="";
   let isImploded = false;
 
+  // IMPLOSION 0 COHESION FACTOR X
   if(r.cohesion === 0 && Math.random() < 0.20) {
     isImploded = true;
     isBoom = true;
@@ -657,6 +694,7 @@ function runSeason(r){
   const statusEl=document.getElementById("qualif-status");
   const btnWorlds=document.getElementById("btn-worlds");
   
+  // LOGIQUE STRICTE ET IMPITOYABLE DE QUALIFICATION
   if (isImploded) {
     qualifMode="none";
     statusEl.innerHTML=`
@@ -671,14 +709,9 @@ function runSeason(r){
     statusEl.innerHTML=`<span style="color:var(--win)">✅ Qualifié directement pour les RLCS Worlds ! (${totalPoints} pts)</span>`;
     btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
   } 
-  else if(finalTeamRating >= 90){
-    qualifMode="direct";
-    statusEl.innerHTML=`<span style="color:var(--win)">✅ Qualifié directement pour les RLCS Worlds !</span> <span style="color:var(--text3);font-size:.76rem">(Bonus de niveau élite : GEN ≥ 90)</span>`;
-    btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
-  }
   else if(finalTeamRating >= 85){
     let lcqOppRating = 87;
-    let lcqMatch = simBo(finalTeamRating, lcqOppRating, 4); 
+    let lcqMatch = simBo(finalTeamRating, lcqOppRating, 4); // Barrage LCQ BO7
     
     if(lcqMatch.won) {
         qualifMode="lcq";
@@ -736,11 +769,23 @@ function simBo(myRating,oppRating,maxWins){
   }
   return{won,myScore:my,oppScore:opp};
 }
-function pickOpp(tier,used){
-  const all=HIST_TEAMS.filter(t=>t.tier===tier);
-  if(!all.length) return HIST_TEAMS[Math.floor(Math.random()*HIST_TEAMS.length)];
-  const pool=all.filter(t=>!used.includes(t.name+"_"+t.year));
-  return (pool.length?pool:all)[Math.floor(Math.random()*(pool.length||all.length))];
+
+// ANTI CLONES : Empêche d'affronter une équipe historique qui possède un joueur de notre équipe
+function getValidOpps() {
+  const myNames = slots.filter(Boolean).map(p => p.name);
+  return HIST_TEAMS.filter(t => !t.roster.some(r => myNames.includes(r)));
+}
+
+function pickOpp(tier, used) {
+  const validTeams = getValidOpps();
+  let tierTeams = validTeams.filter(t => t.tier === tier);
+  if (!tierTeams.length) tierTeams = validTeams;
+  
+  let available = tierTeams.filter(t => !used.includes(t.name + "_" + t.year));
+  if (!available.length) available = tierTeams;
+  if (!available.length) return validTeams[Math.floor(Math.random() * validTeams.length)];
+  
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 // =========================================================
@@ -790,6 +835,11 @@ function runSwiss(){
     let res=simBo(finalTeamRating,opp.rating,3);
     if(finalTeamRating>=95 && Math.random()<0.85 && finalMental >= 3.5) { res.won=true; res.myScore=3; res.oppScore=Math.floor(Math.random()*3); }
     
+    // Penalité de cohésion : Si 0 de cohésion, on choke obligatoirement sa dernière game
+    if (teamCohesion === 0 && wins === 2) {
+        res.won = false; res.oppScore = 3; res.myScore = Math.floor(Math.random() * 3);
+    }
+
     results.push(res.won);if(res.won)wins++;else losses++;
     const card=buildMatchCard(`Swiss Match ${wins+losses}`,opp,res.myScore,res.oppScore,res.won,"Bo5");
     document.getElementById("sw-matches").appendChild(card);
@@ -861,7 +911,13 @@ function runBracket(){
 
     let res = simBo(ratingWithCity, opp.rating, 4);
 
-    if(ri === 1 && finalMental < 3.5) {
+    if (teamCohesion === 0) {
+        res.won = false;
+        res.oppScore = 4;
+        res.myScore = Math.floor(Math.random() * 3);
+        round.label += ` <span style="color:var(--loss);font-size:0.7rem">(Défaut de Cohésion)</span>`;
+    }
+    else if(ri === 1 && finalMental < 3.5) {
         res.won = false;
         res.oppScore = 4;
         res.myScore = Math.floor(Math.random() * 3);
@@ -918,6 +974,9 @@ function runGrandFinals(opp, ratingUsed) {
   const myRoster=slots.filter(Boolean).map(p=>p.name);
   const oppRoster=opp.roster||["P1","P2","P3"];
 
+  const hasBDSKryptonite = myRoster.some(n => ["M0nkey M00n", "Extra", "Seikoo", "Exotiik", "Dralii"].includes(n));
+  const isBDS = opp.name === "Team BDS" && (opp.year === 2022 || opp.year === 2024);
+
   function playNextGame() {
       if(myWins===4 || oppWins===4) {
           const isChamp=myWins===4;
@@ -934,7 +993,18 @@ function runGrandFinals(opp, ratingUsed) {
           return;
       }
 
-      const iWon=Math.random()<winP;
+      let iWon=Math.random()<winP;
+
+      // Plot Armor Team BDS : S'ils affrontent BDS sans Kryptonite, ils ne peuvent PAS gagner la finale.
+      if (isBDS && !hasBDSKryptonite && myWins === 3) {
+          iWon = false; 
+      }
+      
+      // Pénalité Cohésion : Impossible de gagner les Worlds si la cohésion est de 3 ou moins.
+      if (teamCohesion <= 3 && myWins === 3) {
+          iWon = false;
+      }
+
       const winGoals=Math.random()<0.15?3:Math.random()<0.4?2:1;
       const loseGoals=winGoals===1?0:Math.floor(Math.random()*winGoals);
       const myG=iWon?winGoals:loseGoals;
@@ -949,6 +1019,7 @@ function runGrandFinals(opp, ratingUsed) {
           
           const myScorersHTML = myScorers ? `⚽ ${myScorers}` : "";
           const opScorersHTML = opScorers ? `⚽ ${opScorers}` : "";
+          const scorersDisplay = (myScorers || opScorers) ? `<div class="gf-scorers"><span>${myScorersHTML}</span><span style="text-align:right">${opScorersHTML}</span></div>` : ``;
 
           const gameDiv=document.createElement("div");
           gameDiv.className=`gf-game ${iWon?"gw":"gl"}`;
@@ -957,10 +1028,7 @@ function runGrandFinals(opp, ratingUsed) {
               <span class="gf-game-num">Game ${gameNum}${isOT?" · Overtime":""}</span>
               <span class="gf-game-score"><span class="${iWon?"s-win":"s-loss"}">${myG}</span><span style="color:var(--text3);margin:0 4px">–</span><span class="${iWon?"s-loss":"s-win"}">${opG}</span></span>
             </div>
-            <div class="gf-scorers">
-              <span>${myScorersHTML}</span>
-              <span style="text-align:right">${opScorersHTML}</span>
-            </div>`;
+            ${scorersDisplay}`;
           document.getElementById("gf-games").appendChild(gameDiv);
           
           gameNum++;
@@ -971,9 +1039,9 @@ function runGrandFinals(opp, ratingUsed) {
 }
 
 // Fonction du Terrain Visuel Amélioré
-const PITCH_IMG = "pitch_2.png";
-const CAR_IMG   = "car_2.png";
-const BALL_IMG  = "ball_2.png";
+const PITCH_IMG = "pitch_3.png";
+const CAR_IMG   = "car_3.png";
+const BALL_IMG  = "ball_3.png";
 
 function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onComplete) {
   const zone=document.getElementById("gf-engine-zone");
