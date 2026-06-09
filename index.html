@@ -115,14 +115,13 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 .team-logo{width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--bg);border:1px solid var(--border2);flex-shrink:0}
 
 /* PITCH ENGINE */
-#match-engine{background:var(--bg4);border:2px solid var(--gold);border-radius:12px;padding:1.5rem;margin:1rem 0}
 .me-scoreboard{display:flex;justify-content:center;align-items:center;gap:20px;font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;background:var(--bg3);padding:10px;border-radius:8px;border:1px solid var(--border);margin-bottom:10px}
 .me-clock{font-size:1.4rem;color:var(--silver);min-width:70px;text-align:center}
 .pitch-container{
     width:100%;
-    height:300px;
+    height:280px;
     background-color: #235d26;
-    background-image: url('pitch.png');
+    background-image: url('pitch_2.png');
     background-position: center;
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -133,51 +132,6 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
     margin:10px 0;
     box-shadow:inset 0 0 30px rgba(0,0,0,0.8);
 }
-.me-ball {
-    position: absolute;
-    width: 26px;
-    height: 26px;
-    background: url('ball.png') center/contain no-repeat;
-    z-index: 15;
-    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1), left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-}
-.car-icon {
-    position: absolute;
-    width: 44px;
-    height: 26px;
-    background: url('car.png') center/contain no-repeat;
-    z-index: 10;
-    transition: top 0.5s ease-out, left 0.5s ease-out;
-}
-.car-icon.blue {
-    filter: drop-shadow(0 0 6px var(--accent));
-    transform: translate(-50%, -50%);
-}
-.car-icon.orange {
-    filter: drop-shadow(0 0 6px var(--gold));
-    transform: translate(-50%, -50%) scaleX(-1);
-}
-.player-name-tag {
-    position: absolute;
-    top: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    color: #fff;
-    font-size: 0.6rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    pointer-events: none;
-    font-weight: 600;
-}
-.car-icon.orange .player-name-tag {
-    transform: translateX(-50%) scaleX(-1);
-}
-
 .feed-container{height:100px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:0.8rem;line-height:1.4}
 .feed-item{margin-bottom:6px;border-bottom:1px solid var(--border2);padding-bottom:6px;animation:fadein .3s}
 .feed-goal{color:var(--gold);font-weight:bold}
@@ -441,8 +395,8 @@ let usedOpps=[];
 let qualifMode="direct";
 
 // FICHIERS AUDIO
-const goalSound = new Audio('Rocket League Goal Sound.mp3');
-const finalMusic = new Audio('victory.mp3');
+const goalSound = new Audio('Rocket League Goal Sound_2.mp3');
+const finalMusic = new Audio('victory_2.mp3');
 
 function getRegion(nat){return NAT_REGION[nat]||"EU";}
 function pickUniqueWithHistory(pool, slotIndex) {
@@ -536,6 +490,7 @@ function renderRollBtns(i){
 }
 function syncRollBtns(i){["any","region"].forEach(t=>{const b=document.getElementById(`rb-${t}-${i}`);if(b&&rollsUsed[i].includes(t)){b.disabled=true;}});}
 function mentalPips(m){let h="";for(let k=0;k<5;k++)h+=`<div class="mpip${k<m?" on":""}"></div>`;return`<div class="player-mental">${h}</div>`;}
+
 function renderPlayerCard(i){
   const el=document.getElementById(`card-${i}`);const p=slots[i];
   if(!p){el.innerHTML=`<span style="color:var(--text3);font-size:.8rem;font-style:italic">Aucun joueur</span>`;return;}
@@ -653,7 +608,6 @@ function runSeason(r){
   let isBoom=false,tiltReason="";
   let isImploded = false;
 
-  // IMPLOSION 0 COHESION FACTOR X
   if(r.cohesion === 0 && Math.random() < 0.20) {
     isImploded = true;
     isBoom = true;
@@ -703,7 +657,6 @@ function runSeason(r){
   const statusEl=document.getElementById("qualif-status");
   const btnWorlds=document.getElementById("btn-worlds");
   
-  // VERIFICATION IMPLOSION
   if (isImploded) {
     qualifMode="none";
     statusEl.innerHTML=`
@@ -713,16 +666,19 @@ function runSeason(r){
       <div style="margin-top:1rem"><button class="btn-launch primary" onclick="location.reload()" style="max-width:300px;font-size:.9rem;padding:.7rem">↺ Recommencer</button></div>`;
     btnWorlds.classList.add("hidden");
   }
-  // QUALIFICATION DIRECTE (POINTS ONLY)
   else if(totalPoints >= thresh){
     qualifMode="direct";
     statusEl.innerHTML=`<span style="color:var(--win)">✅ Qualifié directement pour les RLCS Worlds ! (${totalPoints} pts)</span>`;
     btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
   } 
-  // LCQ TEST (Pour toutes les équipes >= 85 qui n'ont pas les points, même celles > 90)
+  else if(finalTeamRating >= 90){
+    qualifMode="direct";
+    statusEl.innerHTML=`<span style="color:var(--win)">✅ Qualifié directement pour les RLCS Worlds !</span> <span style="color:var(--text3);font-size:.76rem">(Bonus de niveau élite : GEN ≥ 90)</span>`;
+    btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
+  }
   else if(finalTeamRating >= 85){
     let lcqOppRating = 87;
-    let lcqMatch = simBo(finalTeamRating, lcqOppRating, 4); // Barrage LCQ BO7
+    let lcqMatch = simBo(finalTeamRating, lcqOppRating, 4); 
     
     if(lcqMatch.won) {
         qualifMode="lcq";
@@ -730,7 +686,7 @@ function runSeason(r){
         statusEl.innerHTML=`
           <span style="color:var(--loss)">❌ ${totalPoints} pts — seuil ${teamRegion} (${thresh} pts) non atteint.</span><br>
           <span style="color:var(--warn);font-weight:600;font-size:.92rem">🔁 LCQ : <strong>Victoire (${lcqMatch.myScore}-${lcqMatch.oppScore})</strong> — Qualifié aux Worlds via LCQ !</span><br>
-          <span style="color:var(--text3);font-size:.75rem">Fatigue du LCQ, nouvelle note : <strong style="color:var(--text)">${finalTeamRating}</strong> (−3)</span>`;
+          <span style="color:var(--text3);font-size:.75rem">Fatigue du LCQ — note effective : <strong style="color:var(--text)">${finalTeamRating}</strong> (−3)</span>`;
         btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
     } else {
         qualifMode="none";
@@ -1015,9 +971,9 @@ function runGrandFinals(opp, ratingUsed) {
 }
 
 // Fonction du Terrain Visuel Amélioré
-const PITCH_IMG = "pitch.png";
-const CAR_IMG   = "car.png";
-const BALL_IMG  = "ball.png";
+const PITCH_IMG = "pitch_2.png";
+const CAR_IMG   = "car_2.png";
+const BALL_IMG  = "ball_2.png";
 
 function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onComplete) {
   const zone=document.getElementById("gf-engine-zone");
@@ -1026,27 +982,27 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
   engineDiv.id="gf-engine-"+gameNum;
   engineDiv.style.cssText="background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.75rem";
 
-  engineDiv.innerHTML=
-    '<div style="font-family:Rajdhani,sans-serif;text-transform:uppercase;color:var(--text3);font-size:.7rem;letter-spacing:.15em;text-align:center;margin-bottom:8px">Game '+gameNum+'</div>'+
-    '<div class="me-scoreboard" style="font-size:1.2rem;padding:7px">'+
-      '<span style="color:var(--accent)">'+teamOrg.name+'</span>'+
-      '<span class="me-clock" id="me-clock">5:00</span>'+
-      '<span style="color:var(--gold)">'+opp.name+'</span>'+
-    '</div>'+
-    '<div style="text-align:center;font-size:1.8rem;font-family:Rajdhani,sans-serif;font-weight:700;margin-bottom:8px">'+
-      '<span id="me-my-score" style="color:var(--text)">0</span> - <span id="me-op-score" style="color:var(--text)">0</span>'+
-    '</div>'+
-    '<div id="pitch-'+gameNum+'" style="width:100%;height:220px;position:relative;overflow:hidden;border-radius:8px;background-color:#2e7d32;background-image:url('+PITCH_IMG+');background-size:100% 100%;background-position:center;background-repeat:no-repeat;border:2px solid var(--border2);box-shadow:inset 0 0 20px rgba(0,0,0,.6)"></div>'+
-    '<div class="feed-container" style="height:80px;margin-top:.5rem" id="me-feed"></div>';
+  engineDiv.innerHTML=`
+    <div style="font-family:'Rajdhani';text-transform:uppercase;color:var(--text2);text-align:center;margin-bottom:8px">Game ${gameNum}</div>
+    <div class="me-scoreboard" style="font-size:1.2rem;padding:7px">
+      <span style="color:var(--accent)">${teamOrg.name}</span>
+      <span class="me-clock" id="me-clock">5:00</span>
+      <span style="color:var(--gold)">${opp.name}</span>
+    </div>
+    <div style="text-align:center;font-size:1.8rem;font-family:'Rajdhani';font-weight:700;margin-bottom:8px">
+      <span id="me-my-score" style="color:var(--text)">0</span> - <span id="me-op-score" style="color:var(--text)">0</span>
+    </div>
+    <div id="pitch" class="pitch-container" style="width:100%;height:220px;position:relative;overflow:hidden;border-radius:8px;background-color:#2e7d32;background-image:url('${PITCH_IMG}');background-size:100% 100%;background-position:center;background-repeat:no-repeat;border:2px solid var(--border2);box-shadow:inset 0 0 20px rgba(0,0,0,.6)"></div>
+    <div class="feed-container" style="height:80px;margin-top:.5rem" id="me-feed"></div>`;
 
   zone.appendChild(engineDiv);
   setTimeout(function(){engineDiv.scrollIntoView({behavior:"smooth",block:"center"});},100);
 
-  var pitch=document.getElementById("pitch-"+gameNum);
+  const pitch=document.getElementById("pitch");
 
-  var ballEl=document.createElement("img");
+  const ballEl=document.createElement("img");
   ballEl.src=BALL_IMG;
-  ballEl.style.cssText="position:absolute;width:26px;height:26px;transform:translate(-50%,-50%);z-index:15;transition:left .25s cubic-bezier(.25,1,.5,1),top .25s cubic-bezier(.25,1,.5,1);pointer-events:none;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.8)";
+  ballEl.style.cssText="position:absolute;width:26px;height:26px;transform:translate(-50%,-50%);z-index:15;transition:left .3s ease-out, top .3s ease-out;pointer-events:none;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.8)";
   ballEl.style.left="50%"; ballEl.style.top="50%";
   pitch.appendChild(ballEl);
 
@@ -1074,6 +1030,18 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
   let ballX = 50, ballY = 50;
   let isGoalAnim = false;
 
+  let timeRemaining=300, currentMyScore=0, currentOpScore=0;
+  const tickRate=16; 
+  let goalTimes=[];
+  for(let i=0;i<myG+opG;i++) goalTimes.push(Math.floor(Math.random()*280)+10);
+  goalTimes.sort((a,b)=>b-a);
+  let myGoalsLeft=myG, opGoalsLeft=opG;
+  
+  const clockEl=document.getElementById("me-clock");
+  const myScEl=document.getElementById("me-my-score");
+  const opScEl=document.getElementById("me-op-score");
+  const feedEl=document.getElementById("me-feed");
+
   const timer=setInterval(()=>{
       if(!isGoalAnim) timeRemaining -= 2;
       if(timeRemaining<0) timeRemaining=0;
@@ -1086,8 +1054,8 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
         ballY += (Math.random() * 26 - 13);
         ballX = Math.max(10, Math.min(90, ballX));
         ballY = Math.max(18, Math.min(82, ballY));
-        document.getElementById("me-ball").style.left = ballX + "%";
-        document.getElementById("me-ball").style.top = ballY + "%";
+        ballEl.style.left = ballX + "%";
+        ballEl.style.top = ballY + "%";
 
         for(let i=0;i<3;i++){
           let myCarX = ballX + (Math.random() * 30 - 15);
@@ -1114,8 +1082,8 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
 
         ballX = isMyGoal ? 90 : 10; 
         ballY = 50;
-        document.getElementById("me-ball").style.left = ballX + "%";
-        document.getElementById("me-ball").style.top = ballY + "%";
+        ballEl.style.left = ballX + "%";
+        ballEl.style.top = ballY + "%";
 
         let scorerCar = isMyGoal ? myCars[scorerIndex] : opCars[scorerIndex];
         scorerCar.style.left = (isMyGoal ? 85 : 15) + "%";
@@ -1136,8 +1104,8 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
 
         setTimeout(() => {
             ballX = 50; ballY = 50;
-            document.getElementById("me-ball").style.left = "50%";
-            document.getElementById("me-ball").style.top = "50%";
+            ballEl.style.left = "50%";
+            ballEl.style.top = "50%";
             for(let i=0;i<3;i++){
                 myCars[i].style.left = (50 - (i+1)*10) + "%";
                 myCars[i].style.top = (20 + (i+1)*20) + "%";
