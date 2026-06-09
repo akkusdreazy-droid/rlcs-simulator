@@ -113,71 +113,9 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 .match-verdict{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600}
 .verdict-win{color:var(--win)}.verdict-loss{color:var(--loss)}
 .team-logo{width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--bg);border:1px solid var(--border2);flex-shrink:0}
+.team-info-row{display:flex;align-items:center;gap:7px}
 
 /* PITCH ENGINE */
-#match-engine{background:var(--bg4);border:2px solid var(--gold);border-radius:12px;padding:1.5rem;margin:1rem 0}
-.me-scoreboard{display:flex;justify-content:center;align-items:center;gap:20px;font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;background:var(--bg3);padding:10px;border-radius:8px;border:1px solid var(--border);margin-bottom:10px}
-.me-clock{font-size:1.4rem;color:var(--silver);min-width:70px;text-align:center}
-.pitch-container{
-    width:100%;
-    height:300px;
-    background-color: #235d26;
-    background-image: url('pitch.png');
-    background-position: center;
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    border: 3px solid var(--border);
-    border-radius:10px;
-    position:relative;
-    overflow:hidden;
-    margin:10px 0;
-    box-shadow:inset 0 0 30px rgba(0,0,0,0.8);
-}
-.me-ball {
-    position: absolute;
-    width: 26px;
-    height: 26px;
-    background: url('ball.png') center/contain no-repeat;
-    z-index: 15;
-    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1), left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-}
-.car-icon {
-    position: absolute;
-    width: 44px;
-    height: 26px;
-    background: url('car.png') center/contain no-repeat;
-    z-index: 10;
-    transition: top 0.5s ease-out, left 0.5s ease-out;
-}
-.car-icon.blue {
-    filter: drop-shadow(0 0 6px var(--accent));
-    transform: translate(-50%, -50%);
-}
-.car-icon.orange {
-    filter: drop-shadow(0 0 6px var(--gold));
-    transform: translate(-50%, -50%) scaleX(-1);
-}
-.player-name-tag {
-    position: absolute;
-    top: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    color: #fff;
-    font-size: 0.6rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    pointer-events: none;
-    font-weight: 600;
-}
-.car-icon.orange .player-name-tag {
-    transform: translateX(-50%) scaleX(-1);
-}
-
 .feed-container{height:100px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:0.8rem;line-height:1.4}
 .feed-item{margin-bottom:6px;border-bottom:1px solid var(--border2);padding-bottom:6px;animation:fadein .3s}
 .feed-goal{color:var(--gold);font-weight:bold}
@@ -736,7 +674,7 @@ function runSeason(r){
         statusEl.innerHTML=`
           <span style="color:var(--loss)">❌ ${totalPoints} pts — seuil ${teamRegion} (${thresh} pts) non atteint.</span><br>
           <span style="color:var(--warn);font-weight:600;font-size:.92rem">🔁 LCQ : <strong>Victoire (${lcqMatch.myScore}-${lcqMatch.oppScore})</strong> — Qualifié aux Worlds via LCQ !</span><br>
-          <span style="color:var(--text3);font-size:.75rem">Fatigue du LCQ, nouvelle note : <strong style="color:var(--text)">${finalTeamRating}</strong> (−3)</span>`;
+          <span style="color:var(--text3);font-size:.75rem">Fatigue du LCQ — note effective : <strong style="color:var(--text)">${finalTeamRating}</strong> (−3)</span>`;
         btnWorlds.classList.remove("hidden"); btnWorlds.style.display="";
     } else {
         qualifMode="none";
@@ -1040,12 +978,6 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
     </div>
     <div class="pitch-container" id="pitch">
       <div id="me-ball" class="me-ball" style="left:50%; top:50%"></div>
-      <div class="car-icon blue" id="p-my-1" style="left:40%;top:50%"><div class="player-name-tag">${slots[0].name}</div></div>
-      <div class="car-icon blue" id="p-my-2" style="left:30%;top:30%"><div class="player-name-tag">${slots[1].name}</div></div>
-      <div class="car-icon blue" id="p-my-3" style="left:30%;top:70%"><div class="player-name-tag">${slots[2].name}</div></div>
-      <div class="car-icon orange" id="p-op-1" style="left:60%;top:50%"><div class="player-name-tag">${opp.roster[0]}</div></div>
-      <div class="car-icon orange" id="p-op-2" style="left:70%;top:30%"><div class="player-name-tag">${opp.roster[1]}</div></div>
-      <div class="car-icon orange" id="p-op-3" style="left:70%;top:70%"><div class="player-name-tag">${opp.roster[2]}</div></div>
     </div>
     <div class="feed-container" id="me-feed"></div>`;
   
@@ -1068,6 +1000,7 @@ function simulateVisualGame(gameNum, opp, myG, opG, myRoster, oppRoster, onCompl
     
     const img = document.createElement("img");
     img.src = CAR_IMG;
+    // On flip uniquement l'image de la voiture, pas le pseudo !
     img.style.cssText = `width:36px; height:21px; display:block; filter:drop-shadow(0 0 5px ${isBlue ? 'var(--accent)' : 'var(--gold)'})${!isBlue ? ' hue-rotate(180deg) brightness(1.1)' : ''}; transform:${isBlue ? 'none' : 'scaleX(-1)'};`;
     
     const tag = document.createElement("div");
