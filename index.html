@@ -66,9 +66,11 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 .cohesion-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px}
 .btn-launch{width:100%;padding:.9rem;font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:opacity .2s}
 .btn-launch:hover{opacity:.9}
-.btn-launch:disabled{opacity:.35;cursor:not-allowed}
+.btn-launch:disabled{opacity:.35;cursor:not-allowed; filter:grayscale(1);}
 .btn-launch.primary{background:linear-gradient(135deg,var(--accent),var(--accent2))}
 .btn-launch.gold{background:linear-gradient(135deg,#f5c842,#e6a800);color:#000}
+.btn-ps{flex:1;padding:.6rem;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.85rem;text-transform:uppercase;background:var(--bg4);border:2px solid var(--border2);color:var(--text2);border-radius:6px;cursor:pointer;transition:all .2s;}
+.btn-ps:hover{background:var(--bg);color:var(--text);}
 
 /* TILT & SEASON */
 .tilt-alert{padding:.9rem 1.1rem;border-radius:8px;margin-bottom:1rem;font-size:.86rem;font-weight:600;display:flex;align-items:flex-start;gap:10px;line-height:1.5}
@@ -132,6 +134,51 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
     margin:10px 0;
     box-shadow:inset 0 0 30px rgba(0,0,0,0.8);
 }
+.me-ball {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: url('ball_3.png') center/contain no-repeat;
+    z-index: 15;
+    transition: top 0.3s cubic-bezier(0.25, 1, 0.5, 1), left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+}
+.car-icon {
+    position: absolute;
+    width: 44px;
+    height: 26px;
+    background: url('car_3.png') center/contain no-repeat;
+    z-index: 10;
+    transition: top 0.5s ease-out, left 0.5s ease-out;
+}
+.car-icon.blue {
+    filter: drop-shadow(0 0 6px var(--accent));
+    transform: translate(-50%, -50%);
+}
+.car-icon.orange {
+    filter: drop-shadow(0 0 6px var(--gold));
+    transform: translate(-50%, -50%) scaleX(-1);
+}
+.player-name-tag {
+    position: absolute;
+    top: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-weight: 600;
+}
+.car-icon.orange .player-name-tag {
+    transform: translateX(-50%) scaleX(-1);
+}
+
 .feed-container{height:100px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:0.8rem;line-height:1.4}
 .feed-item{margin-bottom:6px;border-bottom:1px solid var(--border2);padding-bottom:6px;animation:fadein .3s}
 .feed-goal{color:var(--gold);font-weight:bold}
@@ -188,7 +235,18 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
   <section class="phase" id="sec-team" style="display:none">
     <div class="phase-title">2. Identité de l'Équipe</div>
     <div class="team-summary" id="team-summary"></div>
-    <button class="btn-launch primary" id="btn-launch">🏁 Démarrer la Saison RLCS</button>
+    
+    <div id="playstyle-section" style="margin-bottom:1.5rem;">
+        <div class="stat-label" style="font-size:.7rem; margin-bottom:.6rem;">Style de Jeu à attribuer</div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-ps" id="btn-ps-defensif" onclick="setPlaystyle('Defensif')">🛡️ Défensif</button>
+            <button class="btn-ps" id="btn-ps-equilibre" onclick="setPlaystyle('Equilibre')">⚖️ Équilibré</button>
+            <button class="btn-ps" id="btn-ps-ballchasing" onclick="setPlaystyle('Ballchasing')">🏎️ Ballchasing</button>
+        </div>
+        <div id="ps-desc" style="font-size:0.8rem; color:var(--text2); margin-top:8px; min-height:40px;">Sélectionne un style de jeu pour débloquer le lancement de la saison.</div>
+    </div>
+
+    <button class="btn-launch primary" id="btn-launch" disabled>🏁 Démarrer la Saison RLCS</button>
   </section>
   <section class="phase hidden" id="sec-season">
     <div class="phase-title">3. Circuit Régulier</div>
@@ -235,64 +293,64 @@ section.phase{background:var(--bg2);border:1px solid var(--border);border-radius
 // DATA
 // =========================================================
 const FLAGS={FR:"🇫🇷",US:"🇺🇸",CA:"🇨🇦",UK:"🇬🇧",SE:"🇸🇪",NL:"🇳🇱",IT:"🇮🇹",NO:"🇳🇴",BE:"🇧🇪",FI:"🇫🇮",DK:"🇩🇰",DE:"🇩🇪",ES:"🇪🇸",BR:"🇧🇷",CL:"🇨🇱",AU:"🇦🇺",NZ:"🇳🇿",SA:"🇸🇦",MA:"🇲🇦",JP:"🇯🇵"};
-// Itachi (MA) assigné à EU par souci de réalisme esport RLCS
+// Itachi et Dralii (MA) assignés à EU
 const NAT_REGION={FR:"EU",UK:"EU",SE:"EU",NL:"EU",IT:"EU",NO:"EU",BE:"EU",FI:"EU",DK:"EU",DE:"EU",ES:"EU",US:"NA",CA:"NA",BR:"SAM",CL:"SAM",AU:"OCE",NZ:"OCE",SA:"MENA",MA:"EU",JP:"APAC"};
 const REGION_COL={EU:"var(--eu)",NA:"var(--na)",SAM:"var(--sam)",OCE:"var(--oce)",MENA:"var(--mena)",APAC:"var(--apac)"};
 const REGION_QUAL_THRESHOLD={EU:80,NA:65,SAM:55,MENA:50,OCE:40,APAC:35};
 const REGION_DIFFICULTY={EU:94,NA:91,SAM:87,MENA:84,OCE:78,APAC:74};
 
 const PLAYERS=[
-  {name:"Zen",          year:2023,rating:99,nat:"FR",mental:5, titles:1},
-  {name:"M0nkey M00n",  year:2022,rating:98,nat:"FR",mental:5, titles:2},
-  {name:"M0nkey M00n",  year:2024,rating:98,nat:"FR",mental:5, titles:2},
-  {name:"Jstn.",        year:2019,rating:98,nat:"US",mental:4, titles:1},
-  {name:"SquishyMuffinz",year:2018,rating:97,nat:"CA",mental:5, titles:1},
-  {name:"Turbopolsa",   year:2019,rating:97,nat:"SE",mental:5, titles:4},
-  {name:"Kaydop",       year:2019,rating:96,nat:"FR",mental:4, titles:3},
-  {name:"Kaydop",       year:2023,rating:96,nat:"FR",mental:4, titles:3},
-  {name:"GarrettG",     year:2019,rating:96,nat:"US",mental:5, titles:1},
+  {name:"Zen",          year:2023,rating:95,nat:"FR",mental:5, titles:1},
+  {name:"M0nkey M00n",  year:2022,rating:98,nat:"FR",mental:3, titles:2},
+  {name:"M0nkey M00n",  year:2024,rating:95,nat:"FR",mental:1, titles:2},
+  {name:"Jstn.",        year:2019,rating:91,nat:"US",mental:4, titles:1},
+  {name:"SquishyMuffinz",year:2018,rating:91,nat:"CA",mental:5, titles:1},
+  {name:"Turbopolsa",   year:2019,rating:92,nat:"SE",mental:5, titles:4},
+  {name:"Kaydop",       year:2019,rating:93,nat:"FR",mental:4, titles:3},
+  {name:"Kaydop",       year:2023,rating:78,nat:"FR",mental:4, titles:3},
+  {name:"GarrettG",     year:2019,rating:91,nat:"US",mental:5, titles:1},
   {name:"Seikoo",       year:2022,rating:96,nat:"FR",mental:4, titles:1},
   {name:"Exotiik",      year:2024,rating:97,nat:"FR",mental:4, titles:1},
-  {name:"Dralii",       year:2024,rating:96,nat:"MA",mental:4, titles:1},
-  {name:"Kuxir97",      year:2016,rating:96,nat:"IT",mental:5, titles:1},
-  {name:"Vatira",       year:2023,rating:95,nat:"FR",mental:4, titles:0},
-  {name:"Firstkiller",  year:2022,rating:95,nat:"US",mental:2, titles:0},
-  {name:"Scrub Killa",  year:2019,rating:94,nat:"UK",mental:2, titles:1},
-  {name:"Scrub Killa",  year:2023,rating:94,nat:"UK",mental:2, titles:1},
-  {name:"Daniel",       year:2024,rating:94,nat:"US",mental:4, titles:0},
-  {name:"Atomic",       year:2022,rating:94,nat:"US",mental:4, titles:0},
-  {name:"BeastMode",    year:2024,rating:95,nat:"US",mental:3, titles:0},
-  {name:"Alpha54",      year:2023,rating:93,nat:"FR",mental:5, titles:1},
-  {name:"AztraL",       year:2020,rating:93,nat:"BE",mental:1, titles:0},
-  {name:"Radosin",      year:2023,rating:93,nat:"FR",mental:4, titles:1},
+  {name:"Dralii",       year:2024,rating:95,nat:"MA",mental:2, titles:1},
+  {name:"Kuxir97",      year:2016,rating:88,nat:"IT",mental:5, titles:1},
+  {name:"Vatira",       year:2023,rating:90,nat:"FR",mental:2, titles:0},
+  {name:"Firstkiller",  year:2022,rating:89,nat:"US",mental:1, titles:0},
+  {name:"Scrub Killa",  year:2019,rating:88,nat:"UK",mental:1, titles:1},
+  {name:"Scrub Killa",  year:2023,rating:84,nat:"UK",mental:0, titles:1},
+  {name:"Daniel",       year:2024,rating:94,nat:"US",mental:4, titles:1},
+  {name:"Atomic",       year:2022,rating:91,nat:"US",mental:2, titles:1},
+  {name:"BeastMode",    year:2024,rating:95,nat:"US",mental:3, titles:1},
+  {name:"Alpha54",      year:2023,rating:92,nat:"FR",mental:4, titles:1},
+  {name:"AztraL",       year:2020,rating:87,nat:"BE",mental:0, titles:0},
+  {name:"Radosin",      year:2023,rating:91,nat:"FR",mental:5, titles:1},
   {name:"Jstn.",        year:2018,rating:92,nat:"US",mental:4, titles:1},
   {name:"Fairy Peak!",  year:2019,rating:91,nat:"FR",mental:3, titles:1},
-  {name:"GarrettG",     year:2018,rating:91,nat:"US",mental:5, titles:1},
-  {name:"Rise.",        year:2023,rating:91,nat:"UK",mental:3, titles:0},
-  {name:"Vatira",       year:2022,rating:92,nat:"FR",mental:4, titles:0},
-  {name:"Gimmick",      year:2018,rating:91,nat:"US",mental:4, titles:1},
-  {name:"Torment",      year:2018,rating:90,nat:"US",mental:4, titles:1},
-  {name:"Deevo",        year:2017,rating:90,nat:"UK",mental:4, titles:1},
+  {name:"GarrettG",     year:2018,rating:90,nat:"US",mental:5, titles:1},
+  {name:"Rise.",        year:2023,rating:87,nat:"UK",mental:1, titles:0},
+  {name:"Vatira",       year:2022,rating:91,nat:"FR",mental:4, titles:0},
+  {name:"Gimmick",      year:2018,rating:85,nat:"US",mental:4, titles:1},
+  {name:"Torment",      year:2018,rating:89,nat:"US",mental:4, titles:1},
+  {name:"Deevo",        year:2017,rating:87,nat:"UK",mental:4, titles:1},
   {name:"ViolentPanda", year:2017,rating:90,nat:"NL",mental:5, titles:2},
   {name:"Turbopolsa",   year:2017,rating:90,nat:"SE",mental:5, titles:4},
-  {name:"Chicago",      year:2019,rating:90,nat:"US",mental:4, titles:0},
-  {name:"JKnaps",       year:2019,rating:89,nat:"CA",mental:4, titles:0},
-  {name:"Trk511",       year:2024,rating:89,nat:"SA",mental:4, titles:0},
-  {name:"Ahmad",        year:2022,rating:89,nat:"SA",mental:4, titles:0},
-  {name:"Yanxnz",       year:2022,rating:89,nat:"BR",mental:3, titles:0},
+  {name:"Chicago",      year:2019,rating:88,nat:"US",mental:4, titles:0},
+  {name:"JKnaps",       year:2019,rating:87,nat:"CA",mental:4, titles:0},
+  {name:"Trk511",       year:2024,rating:90,nat:"SA",mental:4, titles:0},
+  {name:"Ahmad",        year:2022,rating:85,nat:"SA",mental:4, titles:0},
+  {name:"Yanxnz",       year:2022,rating:84,nat:"BR",mental:2, titles:0},
   {name:"Itachi",       year:2023,rating:88,nat:"MA",mental:4, titles:0},
-  {name:"Metsanauris",  year:2018,rating:88,nat:"FI",mental:4, titles:0},
-  {name:"Caard",        year:2022,rating:87,nat:"BR",mental:3, titles:0},
-  {name:"al0t",         year:2019,rating:87,nat:"SE",mental:3, titles:0},
-  {name:"Ferra",        year:2019,rating:87,nat:"FR",mental:5, titles:0},
-  {name:"Bluey",        year:2019,rating:85,nat:"AU",mental:1, titles:0},
-  {name:"Torsos",       year:2018,rating:83,nat:"AU",mental:3, titles:0},
-  {name:"CJCJ",         year:2022,rating:82,nat:"AU",mental:5, titles:0},
-  {name:"Kamii",        year:2019,rating:81,nat:"NZ",mental:4, titles:0},
-  {name:"Klassux",      year:2018,rating:81,nat:"US",mental:2, titles:0},
-  {name:"Siki",         year:2021,rating:79,nat:"AU",mental:3, titles:0},
-  {name:"ReaLize",      year:2022,rating:75,nat:"JP",mental:3, titles:0},
-  {name:"Zanejackey",   year:2017,rating:76,nat:"US",mental:3, titles:0},
+  {name:"Metsanauris",  year:2018,rating:86,nat:"FI",mental:4, titles:0},
+  {name:"Caard",        year:2022,rating:84,nat:"BR",mental:3, titles:0},
+  {name:"al0t",         year:2019,rating:83,nat:"SE",mental:3, titles:0},
+  {name:"Ferra",        year:2019,rating:86,nat:"FR",mental:5, titles:0},
+  {name:"Bluey",        year:2019,rating:79,nat:"AU",mental:1, titles:0},
+  {name:"Torsos",       year:2018,rating:78,nat:"AU",mental:3, titles:0},
+  {name:"CJCJ",         year:2022,rating:81,nat:"AU",mental:5, titles:0},
+  {name:"Kamii",        year:2019,rating:80,nat:"NZ",mental:4, titles:0},
+  {name:"Klassux",      year:2018,rating:80,nat:"US",mental:2, titles:0},
+  {name:"Siki",         year:2021,rating:76,nat:"AU",mental:3, titles:0},
+  {name:"ReaLize",      year:2022,rating:78,nat:"JP",mental:3, titles:0},
+  {name:"Zanejackey",   year:2017,rating:74,nat:"US",mental:3, titles:0},
 ];
 
 const COACHES=[
@@ -405,6 +463,9 @@ let tiltPenalty=0;
 let totalPoints=0;
 let usedOpps=[];
 let qualifMode="direct";
+let teamPlaystyle = null; // Défensif, Equilibre, Ballchasing
+let timeoutBuff = 0;
+let timeoutUsed = false;
 
 // FICHIERS AUDIO
 const goalSound = new Audio('Rocket League Goal Sound_3.mp3');
@@ -495,7 +556,6 @@ function rollRegion(i){
   if(rollsUsed[i].includes("region")) return;
   rollsUsed[i].push("region");
   const curReg = slots[i] ? getRegion(slots[i].nat) : "EU";
-  // Bloque la région actuelle pour forcer un changement géographique complet
   const pool = PLAYERS.filter(p => getRegion(p.nat) !== curReg); 
   slots[i] = pickUniqueWithHistory(pool.length ? pool : PLAYERS, i);
   renderPlayerCard(i);
@@ -602,6 +662,22 @@ function calcTeam(){
   return{base:Math.round(base),cohesion,extBonus:coachBonus+orgBonus,total,avgMental:Math.round(avgMental*10)/10,region:majReg};
 }
 
+function setPlaystyle(style) {
+    teamPlaystyle = style;
+    document.querySelectorAll('.btn-ps').forEach(b => b.style.borderColor = "var(--border2)");
+    document.getElementById('btn-ps-' + style.toLowerCase()).style.borderColor = "var(--accent)";
+    
+    let desc = "";
+    if(style === 'Defensif') desc = "🛡️ Prend moins de buts, mais marque très peu. Idéal pour faire briller une équipe moyenne, mais insuffisant face aux cadors mondiaux.";
+    else if(style === 'Equilibre') desc = "⚖️ Aucun risque. Sécurise les équipes fortes (réduit le choke en saison régulière), mais limite le potentiel des équipes moyennes.";
+    else if(style === 'Ballchasing') desc = "🏎️ Hyper agressif. 20% de chances d'Upset pour une équipe moyenne. Les équipes fortes écrasent tout, mais le risque de Mental Boom grimpe de 40% !";
+    
+    document.getElementById("ps-desc").innerText = desc;
+    
+    const r = calcTeam();
+    if(r) document.getElementById("btn-launch").disabled = false;
+}
+
 function updateTeamPanel(){
   const r=calcTeam();const sec=document.getElementById("sec-team");
   if(!r){sec.style.display="none";return;}
@@ -616,13 +692,15 @@ function updateTeamPanel(){
     <div class="stat-box"><div class="stat-label">Mental</div><div class="stat-val" style="color:${mCol}">${r.avgMental}</div></div>
     <div class="stat-box"><div class="stat-label">Bonus Ext.</div><div class="stat-val" style="color:var(--win)">+${r.extBonus}</div></div>
     <div class="stat-box"><div class="stat-label">Général</div><div class="stat-val rating-badge ${rc}" style="font-size:1.7rem;display:inline-block;padding:2px 10px">${r.total}</div></div>`;
+  
+  if (teamPlaystyle) document.getElementById("btn-launch").disabled = false;
 }
 
 // =========================================================
 // SEASON & QUALIFICATION
 // =========================================================
 document.getElementById("btn-launch").addEventListener("click",()=>{
-  const r=calcTeam();if(!r)return;
+  const r=calcTeam();if(!r || !teamPlaystyle)return;
   finalTeamRating=r.total;finalMental=r.avgMental;teamCohesion=r.cohesion;tiltPenalty=0;
   document.getElementById("sec-team").style.display="none";
   document.getElementById("sec-season").classList.remove("hidden");
@@ -632,9 +710,20 @@ document.getElementById("btn-launch").addEventListener("click",()=>{
 
 function simEvent(myRating,difficulty,isMajor){
   let delta=myRating-difficulty;
-  if(myRating>90&&!isMajor) delta+=15;
-  if(myRating>=95&&isMajor) delta+=10;
-  const roll=Math.random()*100+delta*2.5;
+  let roll=Math.random()*100+delta*2.5;
+
+  if (teamPlaystyle === "Defensif") {
+      if (myRating < 90 && !isMajor) roll += 15; 
+      if (isMajor) roll = Math.min(roll, 82); // Cap pour empecher les miracles en Major
+  }
+  if (teamPlaystyle === "Equilibre") {
+      if (myRating < 90 && isMajor) roll -= 10; 
+  }
+  if (teamPlaystyle === "Ballchasing") {
+      if (myRating < 90 && Math.random() < 0.20) roll = 120; // 20% upset chance
+      if (myRating >= 95) roll += 15; 
+  }
+
   if(isMajor){
     if(roll>108)return{res:"Victoire 🏆",pts:32};if(roll>97)return{res:"Finale",pts:24};
     if(roll>84)return{res:"Top 4",pts:18};if(roll>68)return{res:"Top 8",pts:12};
@@ -656,19 +745,26 @@ function runSeason(r){
   let isBoom=false,tiltReason="";
   let isImploded = false;
 
-  // IMPLOSION 0 COHESION FACTOR X
-  if(r.cohesion === 0 && Math.random() < 0.20) {
-    isImploded = true;
-    isBoom = true;
-    tiltReason = "Zéro cohésion : L'équipe a totalement implosé de l'intérieur.";
-  } else if(finalMental<2.5&&Math.random()<0.7){
-    isBoom=true;tiltReason="Joueurs trop volatiles — conflits d'ego permanents.";
-  } else if(regions.size>=3&&finalMental<3.5&&Math.random()<0.5){
-    isBoom=true;tiltReason="Barrière de communication inter-régions.";
-  } else if(nats.size===3&&finalMental<3&&Math.random()<0.4){
-    isBoom=true;tiltReason="Clash culturel non géré.";
+  let boomChance = 0;
+  if(r.cohesion === 0) boomChance += 0.20; 
+  if(finalMental<2.5) boomChance += 0.70;
+  else if(regions.size>=3&&finalMental<3.5) boomChance += 0.50;
+  else if(nats.size===3&&finalMental<3) boomChance += 0.40;
+
+  if (teamPlaystyle === "Ballchasing") boomChance += 0.40;
+  if (teamPlaystyle === "Equilibre" && finalMental < 3 && finalTeamRating >= 90) boomChance = Math.max(0, boomChance - 0.50);
+
+  if(boomChance > 0 && Math.random() < boomChance) {
+     if(r.cohesion === 0 && Math.random() < 0.20) {
+        isImploded = true;
+        isBoom = true;
+        tiltReason = "Zéro cohésion : L'équipe a totalement implosé de l'intérieur.";
+     } else {
+        isBoom = true;
+        tiltReason = "Joueurs trop volatiles — conflits d'ego ou pression insoutenable.";
+     }
   }
-  
+
   if(isBoom){
     tiltPenalty=6;finalTeamRating=Math.max(70,r.total-tiltPenalty);
     document.getElementById("tilt-zone").innerHTML=`<div class="tilt-alert boom">🚨 <span>MENTAL BOOM ! ${tiltReason}<br>Pénalité −${tiltPenalty} pts. Général : <strong>${finalTeamRating}</strong></span></div>`;
@@ -706,7 +802,6 @@ function runSeason(r){
   const statusEl=document.getElementById("qualif-status");
   const btnWorlds=document.getElementById("btn-worlds");
   
-  // LOGIQUE STRICTE ET IMPITOYABLE DE QUALIFICATION
   if (isImploded) {
     qualifMode="none";
     statusEl.innerHTML=`
@@ -769,8 +864,26 @@ document.getElementById("btn-worlds").addEventListener("click",()=>{
 // SIM BO
 // =========================================================
 function simBo(myRating,oppRating,maxWins){
-  const delta=myRating-oppRating;
-  const winP=Math.min(0.88,Math.max(0.12,0.5+delta*0.035));
+  let delta=myRating-oppRating;
+  let winP=Math.min(0.88,Math.max(0.12,0.5+delta*0.035));
+  
+  if (myRating === oppRating) {
+      if (finalMental < 3) winP -= 0.05;
+      else if (finalMental >= 4) winP += 0.05;
+  }
+  
+  if (teamPlaystyle === "Defensif" && myRating < 90) {
+      if (oppRating >= 95) winP = 0; 
+      else winP += 0.1;
+  }
+  if (teamPlaystyle === "Equilibre" && myRating < 90) {
+      if (oppRating >= 90) winP = 0.1; 
+  }
+  if (teamPlaystyle === "Ballchasing") {
+      if (myRating < 90 && Math.random() < 0.20) winP = 1.0; 
+      if (myRating >= 95) winP += 0.15; 
+  }
+
   const won=Math.random()<winP;const r=Math.random();let my,opp;
   if(maxWins===3){
     if(won){if(delta>10){my=3;opp=r<.5?0:1;}else if(delta>=3){my=3;opp=r<.5?1:2;}else{my=3;opp=2;}}
@@ -782,7 +895,6 @@ function simBo(myRating,oppRating,maxWins){
   return{won,myScore:my,oppScore:opp};
 }
 
-// ANTI CLONES : Empêche d'affronter une équipe historique qui possède un joueur de notre équipe
 function getValidOpps() {
   const myNames = slots.filter(Boolean).map(p => p.name);
   return HIST_TEAMS.filter(t => !t.roster.some(r => myNames.includes(r)));
@@ -846,7 +958,7 @@ function runSwiss(){
     
     let res=simBo(finalTeamRating,opp.rating,3);
     
-    // Pénalité de cohésion (Si l'équipe s'est qualifiée par miracle malgré 0 cohésion)
+    // Pénalité de cohésion
     if (teamCohesion === 0 && wins === 2) {
         res.won = false; res.oppScore = 3; res.myScore = Math.floor(Math.random() * 3);
     }
@@ -880,7 +992,7 @@ function buildMatchCard(roundLabel,opp,myScore,oppScore,won,format){
 }
 
 // =========================================================
-// BRACKET (QF/SF Direct) + NOUVEAU FACTEUR MENTAL (TIE BREAKER)
+// BRACKET (QF/SF Direct)
 // =========================================================
 function runBracket(){
   document.getElementById("sec-bracket").classList.remove("hidden");
@@ -922,20 +1034,12 @@ function runBracket(){
 
     let res = simBo(ratingWithCity, opp.rating, 4);
 
-    // MENTAL : Uniquement en cas d'égalité de niveau globale
-    if (ratingWithCity === opp.rating) {
-        if (finalMental < 3) {
-            res.won = false;
-            res.oppScore = 4;
-            res.myScore = Math.floor(Math.random() * 3);
-            round.label += ` <span style="color:var(--loss);font-size:0.7rem">(Diff. mentale)</span>`;
-        } else if (finalMental >= 4) {
-            res.won = true;
-            res.myScore = 4;
-            res.oppScore = Math.floor(Math.random() * 3);
-            round.label += ` <span style="color:var(--win);font-size:0.7rem">(Avantage mental)</span>`;
-        }
-    } 
+    if (teamCohesion === 0) {
+        res.won = false;
+        res.oppScore = 4;
+        res.myScore = Math.floor(Math.random() * 3);
+        round.label += ` <span style="color:var(--loss);font-size:0.7rem">(Défaut de Cohésion)</span>`;
+    }
 
     const card = buildMatchCard(round.label, opp, res.myScore, res.oppScore, res.won, "Bo7");
     document.getElementById("bracket").appendChild(card);
@@ -953,7 +1057,7 @@ function runBracket(){
 }
 
 // =========================================================
-// GRANDE FINALE (MATCH ENGINE VISUEL, GAME BY GAME)
+// GRANDE FINALE (MATCH ENGINE VISUEL, GAME BY GAME + TIMEOUT)
 // =========================================================
 function generateGoals(count,roster){
   if(!count)return"";
@@ -974,6 +1078,7 @@ function runGrandFinals(opp, ratingUsed) {
     </div>
     <div id="gf-engine-zone"></div>
     <div id="gf-games"></div>
+    <div id="timeout-zone" style="margin: 1rem 0;"></div>
     <div id="gf-final"></div>`;
   bracket.appendChild(gfEl);
   setTimeout(()=>document.getElementById("sec-bracket").scrollIntoView({behavior:"smooth",block:"end"}),100);
@@ -981,7 +1086,6 @@ function runGrandFinals(opp, ratingUsed) {
   let myWins=0, oppWins=0, gameNum=1;
   const delta=ratingUsed-opp.rating;
   
-  // Le mental n'impacte très légèrement que si égalité de rating
   let mentalMod = 0;
   if (ratingUsed === opp.rating) {
       if (finalMental >= 4) mentalMod = 0.05;
@@ -995,7 +1099,39 @@ function runGrandFinals(opp, ratingUsed) {
   const hasBDSKryptonite = myRoster.some(n => ["M0nkey M00n", "Extra", "Seikoo", "Exotiik", "Dralii"].includes(n));
   const isBDS = opp.name === "Team BDS" && (opp.year === 2022 || opp.year === 2024);
 
-  function playNextGame() {
+  window.triggerTimeout = function() {
+    timeoutUsed = true;
+    document.getElementById("timeout-zone").innerHTML = `
+      <div style="background:var(--bg2); padding:1rem; border:1px solid var(--warn); border-radius:8px; text-align:center; animation:fadein 0.3s;">
+         <div style="color:var(--warn); font-weight:700; margin-bottom:10px; font-size:1.1rem; letter-spacing:0.1em;">⏳ TIMEOUT ACTIF</div>
+         <div style="display:flex; flex-direction:column; gap:8px;">
+           <button class="btn-roll" style="border-color:var(--win); color:var(--win);" onclick="applyTimeout('encourage')">👏 Encourager l'équipe (+ chance si gros mental)</button>
+           <button class="btn-roll" style="border-color:var(--loss); color:var(--loss);" onclick="applyTimeout('reprimand')">🤬 Réprimander son équipe (- chance pour tous)</button>
+           <button class="btn-roll" style="border-color:var(--accent); color:var(--accent);" onclick="applyTimeout('trashtalk')">📢 Trashtalk l'équipe adverse (+10% chance de victoire)</button>
+         </div>
+      </div>
+    `;
+  };
+
+  window.applyTimeout = function(choice) {
+    if(choice === 'encourage') {
+        if(finalMental >= 4) timeoutBuff += 0.20;
+        if(finalTeamRating < 95) timeoutBuff += 0.05;
+        else timeoutBuff += 0.10;
+    } else if(choice === 'reprimand') {
+        timeoutBuff -= 0.20;
+    } else if(choice === 'trashtalk') {
+        timeoutBuff += 0.10;
+    }
+    window.resumeGrandFinal();
+  };
+
+  window.resumeGrandFinal = function() {
+    document.getElementById("timeout-zone").innerHTML = "";
+    playNextGame();
+  };
+
+  function promptNextGame() {
       if(myWins===4 || oppWins===4) {
           const isChamp=myWins===4;
           const finalEl=document.getElementById("gf-final");
@@ -1010,21 +1146,33 @@ function runGrandFinals(opp, ratingUsed) {
           }
           return;
       }
-
-      let iWon=Math.random()<winP;
-
-      // Plot Armor Team BDS : S'ils affrontent BDS sans Kryptonite, ils ne peuvent PAS gagner la finale.
-      if (isBDS && !hasBDSKryptonite && myWins === 3) {
-          iWon = false; 
-      }
       
-      // Pénalité Cohésion : Impossible de gagner les Worlds si la cohésion n'est pas exceptionnelle (4 ou 5)
-      if (teamCohesion <= 3 && myWins === 3) {
-          iWon = false;
+      let html = `<div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap;">`;
+      if(!timeoutUsed && (myWins > 0 || oppWins > 0)) {
+          html += `<button class="btn-launch primary" style="width:auto; padding:0.7rem 1.4rem; font-size:0.9rem;" onclick="triggerTimeout()">⏳ TIMEOUT</button>`;
       }
+      html += `<button class="btn-launch" style="width:auto; padding:0.7rem 1.4rem; font-size:0.9rem; background:var(--bg3); border:1px solid var(--border);" onclick="resumeGrandFinal()">▶ LANCER GAME ${gameNum}</button>`;
+      html += `</div>`;
+      
+      document.getElementById("timeout-zone").innerHTML = html;
+      document.getElementById("timeout-zone").scrollIntoView({behavior:"smooth", block:"nearest"});
+  }
 
-      const winGoals=Math.random()<0.15?3:Math.random()<0.4?2:1;
-      const loseGoals=winGoals===1?0:Math.floor(Math.random()*winGoals);
+  function playNextGame() {
+      let iWon=Math.random() < (winP + timeoutBuff);
+
+      // Plot Armor Team BDS
+      if (isBDS && !hasBDSKryptonite && myWins === 3) iWon = false; 
+      
+      // Pénalité Cohésion (Impossible de gagner les Worlds si cohésion <= 3)
+      if (teamCohesion <= 3 && myWins === 3) iWon = false;
+      
+      // Ballchasing upset en finale
+      if (teamPlaystyle === "Ballchasing" && ratingUsed < 90 && Math.random() < 0.20) iWon = true;
+
+      const winGoals = teamPlaystyle === "Ballchasing" ? (Math.random() < 0.5 ? 4 : 3) : teamPlaystyle === "Defensif" ? (Math.random() < 0.8 ? 1 : 2) : (Math.random() < 0.15 ? 3 : Math.random() < 0.4 ? 2 : 1);
+      const loseGoals = teamPlaystyle === "Defensif" ? 0 : teamPlaystyle === "Ballchasing" ? (Math.floor(Math.random() * (winGoals - 1)) + 1) : (winGoals === 1 ? 0 : Math.floor(Math.random() * winGoals));
+      
       const myG=iWon?winGoals:loseGoals;
       const opG=iWon?loseGoals:winGoals;
 
@@ -1050,10 +1198,12 @@ function runGrandFinals(opp, ratingUsed) {
           document.getElementById("gf-games").appendChild(gameDiv);
           
           gameNum++;
-          setTimeout(playNextGame, 1500);
+          setTimeout(promptNextGame, 800);
       });
   }
-  setTimeout(playNextGame, 1000);
+  
+  // Start the prompt loop instead of playing directly
+  setTimeout(promptNextGame, 1000);
 }
 
 // Fonction du Terrain Visuel Amélioré
@@ -1274,6 +1424,7 @@ function shareResult(){
     `🎮 ${teamOrg?teamOrg.name:"?"} · ${teamRegion}\n`+
     `👥 ${playerNames}\n`+
     `🧠 Coach : ${coachName}\n`+
+    `📈 Style : ${teamPlaystyle}\n`+
     `📊 ${totalPoints} pts · ${qualifMode==="lcq"?"via LCQ":qualifMode==="none"?"Implosion Roster":"Qualif. directe"}\n`+
     `🏆 Résultat : ${placingText}`;
   if(navigator.clipboard){
